@@ -34,9 +34,32 @@ def next_page():
 
     else:
         next_button.click()
-        print("click")
+        # print("click")
 
     time.sleep(3)
+
+# 식당정보 수집
+def crawl_rst_info():
+    rst_name = driver.find_element(By.CSS_SELECTOR, ".Fc1rA").text              # 식당이름
+    rst_category =  driver.find_element(By.CSS_SELECTOR, ".DJJvD").text         # 식당 카테고리
+    rst_nreviews =  driver.find_elements(By.CSS_SELECTOR, ".PXMot")[-2].text    # 식당 리뷰 수
+    rst_address =  driver.find_element(By.CSS_SELECTOR, ".LDgIH").text     # 식당 주소
+    rst_number = driver.find_element(By.CSS_SELECTOR, ".xlx7Q").text        # 식당 전화번호
+
+    time_button = driver.find_elements(By.CSS_SELECTOR, "._UCia")[1].click()           # 식당 시간 더보기 버튼 클릭
+    time.sleep(2)
+    rst_times =  driver.find_elements(By.CSS_SELECTOR, ".A_cdD")[1:]        # 요일별 영업시간들
+    
+    times = []
+    for rst_time in rst_times:
+        times.append(rst_time.text)
+
+    print(rst_name)       # clear
+    print(rst_category)   # clear
+    print(rst_nreviews)   # clear
+    print(rst_address)    # clear
+    print(rst_number)     # clear
+    print(times)          # clear
 
 # Setting
 # 크롬 드라이버 다운로드 및 자동 설정
@@ -49,7 +72,9 @@ chrome_options.add_experimental_option("detach", True)
 # 불필요한 에러 메시지 삭제
 chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
-# 크롬 브라우저를 열고 cbs news 웹페이지로 이동
+# 크롬 브라우저를 열고 네이버 맵 keyword로 이동
+
+print("Let's Start-!!")
 keyword = '광진구음식점'
 url = f"https://map.naver.com/p/search/{keyword}"
 driver = webdriver.Chrome(service=Service(chrome_driver_path), options=chrome_options)
@@ -58,7 +83,7 @@ driver.maximize_window()
 time.sleep(5)
 
 
-# iframe으로 전환
+# 지도가 아닌 검색 탭의 iframe으로 전환
 iframe = driver.find_element(By.CSS_SELECTOR, "iframe#searchIframe")
 driver.switch_to.frame(iframe)
 time.sleep(3)
@@ -70,15 +95,43 @@ while tag != -1:
     # 밑으로 최대한 내리기
     scroll_down()
 
-    """
-    정보 수집
-    """
     rsts = driver.find_elements(By.CSS_SELECTOR, ".UEzoS")
-    result += len(rsts)
+    for rst in rsts:
+        rst = rst.find_element(By.CSS_SELECTOR, ".tzwk0")
+
+        # 레스토랑 방문
+        rst.click()
+        time.sleep(2)
+
+        # 전체 페이지로 복귀하도록 iframe에서 벗어나기 -> 그래야만 새로 생긴 iframe 탭에 접근할 수 있음
+        driver.switch_to.default_content()
+
+        # 새로 생긴 식당 탭 iframe으로 전환
+        iframe = driver.find_element(By.CSS_SELECTOR, "#entryIframe")
+        driver.switch_to.frame(iframe)
+        time.sleep(2)
+        print("식당 탭 iframe 전환")
+
+        """
+        정보 수집
+        """
+        crawl_rst_info()
+
+        # iframe 다시 레스토랑 전체 탭으로 복귀
+        driver.switch_to.default_content()
+        iframe = driver.find_element(By.CSS_SELECTOR, "iframe#searchIframe")
+        driver.switch_to.frame(iframe)
+        time.sleep(2)
+        print('-----------------------------------------------------------------')
+        print()
+
+
+
+    # result += len(rsts)
     # 다음 페이지
     tag = next_page()
 
 # iframe에서 벗어나기
 driver.switch_to.default_content()
 
-print("광진구 음식점 수 =", result)
+print("Done-!!!")
