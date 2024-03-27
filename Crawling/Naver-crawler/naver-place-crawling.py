@@ -40,19 +40,50 @@ def next_page():
 
 # 식당정보 수집
 def crawl_rst_info():
-    rst_name = driver.find_element(By.CSS_SELECTOR, ".Fc1rA").text              # 식당이름
-    rst_category =  driver.find_element(By.CSS_SELECTOR, ".DJJvD").text         # 식당 카테고리
-    rst_nreviews =  driver.find_elements(By.CSS_SELECTOR, ".PXMot")[-2].text    # 식당 리뷰 수
-    rst_address =  driver.find_element(By.CSS_SELECTOR, ".LDgIH").text     # 식당 주소
-    rst_number = driver.find_element(By.CSS_SELECTOR, ".xlx7Q").text        # 식당 전화번호
+    try:
+        rst_name = driver.find_element(By.CSS_SELECTOR, ".Fc1rA").text              # 식당이름
+    except:
+        rst_name = None
+    try:
+        rst_category =  driver.find_element(By.CSS_SELECTOR, ".DJJvD").text         # 식당 카테고리
+    except:
+        rst_category = None
+    try:
+        rst_nreviews =  driver.find_elements(By.CSS_SELECTOR, ".PXMot")[-2].text    # 식당 리뷰 수
+    except:
+        rst_nreviews = None
+    try:
+        rst_address =  driver.find_element(By.CSS_SELECTOR, ".LDgIH").text          # 식당 주소
+    except:
+        rst_address = None
+    try:
+        rst_number = driver.find_element(By.CSS_SELECTOR, ".xlx7Q").text            # 식당 전화번호
+    except:
+        rst_number = None
 
-    time_button = driver.find_elements(By.CSS_SELECTOR, "._UCia")[1].click()           # 식당 시간 더보기 버튼 클릭
+    time_button = driver.find_elements(By.CSS_SELECTOR, "._UCia")[1].click()        # 식당 시간 더보기 버튼 클릭
     time.sleep(2)
-    rst_times =  driver.find_elements(By.CSS_SELECTOR, ".A_cdD")[1:]        # 요일별 영업시간들
-    
+    rst_times =  driver.find_elements(By.CSS_SELECTOR, ".A_cdD")[1:]                # 요일별 영업시간들
     times = []
     for rst_time in rst_times:
         times.append(rst_time.text)
+
+    tabs = driver.find_elements(By.CSS_SELECTOR, "._tab-menu")
+    for tab in tabs:
+        if tab.text == '메뉴':
+            menu_button = tab                                                       # 메뉴 정보 수집
+
+    menu_button.click()
+    time.sleep(1)
+    menus_tab = driver.find_elements(By.CSS_SELECTOR, ".E2jtL")
+    menus = {}
+    for menu in menus_tab:
+        title = menu.find_element(By.CSS_SELECTOR, ".lPzHi").text
+        price = menu.find_element(By.CSS_SELECTOR, ".GXS1X")
+        price = price.find_element(By.TAG_NAME, "em").text                          # 가격 정보 함께 수집
+
+        menus[title] = price
+
 
     print(rst_name)       # clear
     print(rst_category)   # clear
@@ -60,6 +91,11 @@ def crawl_rst_info():
     print(rst_address)    # clear
     print(rst_number)     # clear
     print(times)          # clear
+    print(menus)          # clear
+
+    rst_info = [rst_name, rst_category, rst_address, times, rst_nreviews, rst_number, menus, 0]
+
+    return rst_info
 
 # Setting
 # 크롬 드라이버 다운로드 및 자동 설정
@@ -89,14 +125,24 @@ driver.switch_to.frame(iframe)
 time.sleep(3)
 print("iframe 전환")
 
+
+infos = []
+columns = ['name', 'category', 'address', 'opening_hours', 'num_reviews', 'contact', 'menus', 'platform']
+
 result = 0 # 전체 식당 수
 tag = 1
+
+cnt=0 # test
 while tag != -1:
+
     # 밑으로 최대한 내리기
     scroll_down()
 
     rsts = driver.find_elements(By.CSS_SELECTOR, ".UEzoS")
     for rst in rsts:
+        if cnt == 2:
+            break
+        # test
         rst = rst.find_element(By.CSS_SELECTOR, ".tzwk0")
 
         # 레스토랑 방문
@@ -115,21 +161,30 @@ while tag != -1:
         """
         정보 수집
         """
-        crawl_rst_info()
+        info = crawl_rst_info()
+        infos.append(info)
 
         # iframe 다시 레스토랑 전체 탭으로 복귀
         driver.switch_to.default_content()
         iframe = driver.find_element(By.CSS_SELECTOR, "iframe#searchIframe")
         driver.switch_to.frame(iframe)
         time.sleep(2)
-        print('-----------------------------------------------------------------')
+        print('----------------------------------------------------------------------------------------------------------------')
         print()
+        # test
+        cnt+=1
 
-
-
+    if cnt == 2:
+        break
+        # test
     # result += len(rsts)
     # 다음 페이지
     tag = next_page()
+
+
+# 리스트를 데이터프레임으로 변환
+df = pd.DataFrame(infos, columns=columns)
+df.to_csv("test.csv", encoding='cp949')
 
 # iframe에서 벗어나기
 driver.switch_to.default_content()
