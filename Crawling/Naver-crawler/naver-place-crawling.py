@@ -39,27 +39,80 @@ def next_page():
     time.sleep(3)
 
 # 식당정보 수집
-def crawl_rst_info():
-    rst_name = driver.find_element(By.CSS_SELECTOR, ".Fc1rA").text              # 식당이름
-    rst_category =  driver.find_element(By.CSS_SELECTOR, ".DJJvD").text         # 식당 카테고리
-    rst_nreviews =  driver.find_elements(By.CSS_SELECTOR, ".PXMot")[-2].text    # 식당 리뷰 수
-    rst_address =  driver.find_element(By.CSS_SELECTOR, ".LDgIH").text     # 식당 주소
-    rst_number = driver.find_element(By.CSS_SELECTOR, ".xlx7Q").text        # 식당 전화번호
+def crawl_rst_info(word):
+    try:
+        rst_name = driver.find_element(By.CSS_SELECTOR, ".Fc1rA").text              # 식당이름
+    except:
+        rst_name = None
+    try:
+        rst_category =  driver.find_element(By.CSS_SELECTOR, ".DJJvD").text         # 식당 카테고리
+    except:
+        rst_category = None
+    try:
+        rst_address =  driver.find_element(By.CSS_SELECTOR, ".LDgIH").text          # 식당 주소
+    except:
+        rst_address = None
+    try:
+        rst_number = driver.find_element(By.CSS_SELECTOR, ".xlx7Q").text            # 식당 전화번호
+    except:
+        rst_number = None
 
-    time_button = driver.find_elements(By.CSS_SELECTOR, "._UCia")[1].click()           # 식당 시간 더보기 버튼 클릭
+    time_button = driver.find_elements(By.CSS_SELECTOR, "._UCia")[1].click()        # 식당 시간 더보기 버튼 클릭
     time.sleep(2)
-    rst_times =  driver.find_elements(By.CSS_SELECTOR, ".A_cdD")[1:]        # 요일별 영업시간들
-    
+    rst_times =  driver.find_elements(By.CSS_SELECTOR, ".A_cdD")[1:]                # 요일별 영업시간들
     times = []
     for rst_time in rst_times:
-        times.append(rst_time.text)
+        times.append(rst_time.text.replace("\n", " "))
+
+
+
+    tabs = driver.find_elements(By.CSS_SELECTOR, "._tab-menu")
+    for tab in tabs:
+        if tab.text == '메뉴':
+            menu_button = tab                                                       # 메뉴 정보 수집
+
+    menu_button.click()
+    time.sleep(1)
+    menus_tab = driver.find_elements(By.CSS_SELECTOR, ".E2jtL")
+    
+    menu_li = []
+    price_li = []
+    rst_li = []
+    for menu in menus_tab:
+        try:
+            title = menu.find_element(By.CSS_SELECTOR, ".lPzHi").text
+        except:
+            title = None
+        try:
+            price = menu.find_element(By.CSS_SELECTOR, ".GXS1X")
+            price = price.find_element(By.TAG_NAME, "em").text                      # 가격 정보 함께 수집
+        except:
+            price = None
+
+        rst_li.append(rst_name)
+        menu_li.append(title)
+        price_li.append(price)
+        
+
 
     print(rst_name)       # clear
     print(rst_category)   # clear
-    print(rst_nreviews)   # clear
     print(rst_address)    # clear
     print(rst_number)     # clear
     print(times)          # clear
+    print(menu_li)        # clear
+    print(price_li)       # clear
+
+    rst_info = [rst_name, word, rst_category, rst_address, times, rst_number, 0]
+
+    return rst_info, rst_li, menu_li, price_li
+
+
+
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 
 # Setting
 # 크롬 드라이버 다운로드 및 자동 설정
@@ -75,8 +128,10 @@ chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
 # 크롬 브라우저를 열고 네이버 맵 keyword로 이동
 
 print("Let's Start-!!")
-keyword = '광진구음식점'
-url = f"https://map.naver.com/p/search/{keyword}"
+region = '광진구'
+word = ['음식점', '카페', '술집']
+query = region + word[0]
+url = f"https://map.naver.com/p/search/{query}"
 driver = webdriver.Chrome(service=Service(chrome_driver_path), options=chrome_options)
 driver.get(url)
 driver.maximize_window()
@@ -89,14 +144,25 @@ driver.switch_to.frame(iframe)
 time.sleep(3)
 print("iframe 전환")
 
+
+infos, rst_lis, menu_lis, price_lis = [], [], [], []
+columns = ['name', 'category', 'sub_category', 'address', 'opening_hours', 'contact', 'platform']
+menu_columns = ['rst_name', 'menu_name', 'price']
+
 result = 0 # 전체 식당 수
 tag = 1
+
+cnt=0 # test
 while tag != -1:
+
     # 밑으로 최대한 내리기
     scroll_down()
 
     rsts = driver.find_elements(By.CSS_SELECTOR, ".UEzoS")
     for rst in rsts:
+        if cnt == 3:
+            break
+        # test
         rst = rst.find_element(By.CSS_SELECTOR, ".tzwk0")
 
         # 레스토랑 방문
@@ -115,21 +181,39 @@ while tag != -1:
         """
         정보 수집
         """
-        crawl_rst_info()
+        info, rst_li, menu_li, price_li = crawl_rst_info(word[0])
+        infos.append(info)
+        rst_lis.extend(rst_li)
+        menu_lis.extend(menu_li)
+        price_lis.extend(price_li)
+
 
         # iframe 다시 레스토랑 전체 탭으로 복귀
         driver.switch_to.default_content()
         iframe = driver.find_element(By.CSS_SELECTOR, "iframe#searchIframe")
         driver.switch_to.frame(iframe)
         time.sleep(2)
-        print('-----------------------------------------------------------------')
+        print('----------------------------------------------------------------------------------------------------------------')
         print()
+        # test
+        cnt+=1
 
-
-
+    if cnt == 3:
+        break
+        # test
     # result += len(rsts)
     # 다음 페이지
     tag = next_page()
+
+
+# 리스트를 데이터프레임으로 변환
+df_rst = pd.DataFrame(infos, columns=columns)
+df_rst.to_csv("test.csv", encoding='cp949')
+
+rst_menu = pd.DataFrame({menu_columns[0]:rst_lis,
+                         menu_columns[1]:menu_lis,
+                         menu_columns[2]:price_lis})
+rst_menu.to_csv("restaurant_menu.csv", encoding='cp949')
 
 # iframe에서 벗어나기
 driver.switch_to.default_content()
