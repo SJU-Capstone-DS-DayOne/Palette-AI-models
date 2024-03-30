@@ -73,34 +73,38 @@ def crawl_rst_info(word):
     except:
         times = []
 
+    try:
+        tabs = driver.find_elements(By.CSS_SELECTOR, "._tab-menu")
+        for tab in tabs:
+            if tab.text == '메뉴':
+                menu_button = tab                                                       # 메뉴 정보 수집
 
-    tabs = driver.find_elements(By.CSS_SELECTOR, "._tab-menu")
-    for tab in tabs:
-        if tab.text == '메뉴':
-            menu_button = tab                                                       # 메뉴 정보 수집
+        menu_button.click()
+        time.sleep(2)
+        menus_tab = driver.find_elements(By.CSS_SELECTOR, ".E2jtL")
+        
+        menu_li = []
+        price_li = []
+        rst_li = []
+        for menu in menus_tab:
+            try:
+                title = menu.find_element(By.CSS_SELECTOR, ".lPzHi").text
+            except:
+                title = None
+            try:
+                price = menu.find_element(By.CSS_SELECTOR, ".GXS1X")
+                price = price.find_element(By.TAG_NAME, "em").text                      # 가격 정보 함께 수집
+            except:
+                price = None
 
-    menu_button.click()
-    time.sleep(2)
-    menus_tab = driver.find_elements(By.CSS_SELECTOR, ".E2jtL")
-    
-    menu_li = []
-    price_li = []
-    rst_li = []
-    for menu in menus_tab:
-        try:
-            title = menu.find_element(By.CSS_SELECTOR, ".lPzHi").text
-        except:
-            title = None
-        try:
-            price = menu.find_element(By.CSS_SELECTOR, ".GXS1X")
-            price = price.find_element(By.TAG_NAME, "em").text                      # 가격 정보 함께 수집
-        except:
-            price = None
-
-        rst_li.append(rst_name)
-        menu_li.append(title)
-        price_li.append(price)
-        time.sleep(0.3)
+            rst_li.append(rst_name)
+            menu_li.append(title)
+            price_li.append(price)
+            time.sleep(0.3)
+    except:
+        menu_li = []
+        price_li = []
+        rst_li = []
         
     print(rst_name)       # clear
     print(rst_category)   # clear
