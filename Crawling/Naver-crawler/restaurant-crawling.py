@@ -200,14 +200,14 @@ def crawling_rst_and_save(driver, q_, path):
     # 식당 스키마
     rst_cols = ['name', 'category', 'sub_category', 'address', 'contact', 'platform', 'url', 'opneing_hours']
     df_rst = pd.DataFrame(infos, columns=rst_cols)
-    df_rst.to_csv(path + f"/restaurant_{q_}_naver.csv", encoding='cp949')
+    df_rst.to_csv(path + f"/restaurant_{q_}_naver.csv", encoding='utf-8-sig')
 
     # 메뉴 스키마
     menu_cols = ['rst_name', 'menu_name', 'price']
     rst_menu = pd.DataFrame({menu_cols[0]:rst_lis,
                             menu_cols[1]:menu_lis,
                             menu_cols[2]:price_lis})
-    rst_menu.to_csv(path + f"/restaurant_menu_{q_}_naver.csv", encoding='cp949')
+    rst_menu.to_csv(path + f"/restaurant_menu_{q_}_naver.csv", encoding='utf-8-sig')
 
     # iframe에서 벗어나 전체 페이지로 복귀
     driver.switch_to.default_content()
@@ -239,31 +239,32 @@ chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
 # 크롬 브라우저를 열고 네이버 맵 keyword로 이동
 print("Let's Start-!!")
-region = ['중곡동', '군자동', '능동', '화양동', '자양동', '구의동', '광장동']
+regions = ['중곡동', '군자동', '능동', '화양동', '자양동', '구의동', '광장동']
 words = ['음식점', '카페', '술집']
-query = region[0] + " " + words[0]
+query = regions[0] + " " + words[0]
 
 # 저장할 파일의 경로 설정
 path = "E:/MOON/capstone_data"  # E 드라이브의 MOON 폴더 경로. 데이터를 저장해줄 경로
 
-for word in words:
-    query = region[0] + " " + word
-    q_ = region[0] + "_" + word
+for region in regions[:1]:
+    for word in words:
+        query = region + " " + word
+        q_ = region + "_" + word
 
-    url = f"https://map.naver.com/p/search/{query}"
-    driver = webdriver.Chrome(service=Service(chrome_driver_path), options=chrome_options)
-    driver.get(url)
-    driver.maximize_window()
-    time.sleep(5)
+        url = f"https://map.naver.com/p/search/{query}"
+        driver = webdriver.Chrome(service=Service(chrome_driver_path), options=chrome_options)
+        driver.get(url)
+        driver.maximize_window()
+        time.sleep(5)
 
-    # 지도가 아닌 검색 탭의 iframe으로 전환
-    iframe = driver.find_element(By.CSS_SELECTOR, "iframe#searchIframe")
-    driver.switch_to.frame(iframe)
-    time.sleep(3)
-    print("iframe 전환")
+        # 지도가 아닌 검색 탭의 iframe으로 전환
+        iframe = driver.find_element(By.CSS_SELECTOR, "iframe#searchIframe")
+        driver.switch_to.frame(iframe)
+        time.sleep(3)
+        print("iframe 전환")
 
-    # query에 대한 정보 수집과 csv파일 저장까지 완료
-    crawling_rst_and_save(driver, q_, path)
-    
-    # 창 종료
-    driver.quit()
+        # query에 대한 정보 수집과 csv파일 저장까지 완료
+        crawling_rst_and_save(driver, q_, path)
+        
+        # 창 종료
+        driver.quit()
