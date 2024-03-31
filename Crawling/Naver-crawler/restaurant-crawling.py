@@ -5,16 +5,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 import time
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from bs4 import BeautifulSoup
-import pandas as pd
-from datetime import datetime
-import os
-import requests
-import re
 from time import sleep
 import random
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import pandas as pd
 
 
 # 네이버 플레이스 함수
@@ -23,7 +18,7 @@ def scroll_down():
     for i in range(4):
         # 페이지 아래로 스크롤
         driver.execute_script("arguments[0].scrollTo(0, arguments[0].scrollHeight);", driver.find_element(By.CSS_SELECTOR, "#_pcmap_list_scroll_container"))
-        time.sleep(3)
+        time.sleep(2)
 
 def next_page():
 
@@ -37,7 +32,7 @@ def next_page():
         next_button.click()
         # print("click")
 
-    time.sleep(3)
+    time.sleep(2.5)
 
 # 식당정보 수집
 def crawl_rst_info(word):
@@ -45,22 +40,22 @@ def crawl_rst_info(word):
     
     try:
         rst_name = driver.find_element(By.CSS_SELECTOR, ".Fc1rA").text              # 식당이름
-        time.sleep(1)
+        time.sleep(0.5)
     except:
         rst_name = None
     try:
         rst_category =  driver.find_element(By.CSS_SELECTOR, ".DJJvD").text         # 식당 카테고리
-        time.sleep(1)
+        time.sleep(0.5)
     except:
         rst_category = None
     try:
         rst_address =  driver.find_element(By.CSS_SELECTOR, ".LDgIH").text          # 식당 주소
-        time.sleep(1)
+        time.sleep(0.5)
     except:
         rst_address = None
     try:
         rst_number = driver.find_element(By.CSS_SELECTOR, ".xlx7Q").text            # 식당 전화번호
-        time.sleep(1)
+        time.sleep(0.5)
     except:
         rst_number = None
     try:
@@ -80,7 +75,7 @@ def crawl_rst_info(word):
                 menu_button = tab                                                       # 메뉴 정보 수집
 
         menu_button.click()
-        time.sleep(2)
+        time.sleep(1.5)
         menus_tab = driver.find_elements(By.CSS_SELECTOR, ".E2jtL")
         
         menu_li = []
@@ -135,13 +130,13 @@ def find_show_more():
 
 def crawling_rst_and_save(driver, q_, path):
     infos, rst_lis, menu_lis, price_lis = [], [], [], []    # 식당에 정보 저장하는 리스트
-    results = []   
 
     tag = 1
     # query에 대해 크롤링 수행
     while tag != -1:
         # 밑으로 최대한 내리기
-        # scroll_down()
+        scroll_down()
+        time.sleep(1)
 
         # 레스토랑 및 리뷰 정보 수집
         rsts = driver.find_elements(By.CSS_SELECTOR, ".UEzoS")
@@ -154,6 +149,7 @@ def crawling_rst_and_save(driver, q_, path):
 
             # 전체 페이지로 복귀하도록 iframe에서 벗어나기 -> 그래야만 새로 생긴 iframe 탭에 접근할 수 있음
             driver.switch_to.default_content()
+            time.sleep(0.5)
 
             # 새로 생긴 식당 탭 iframe으로 전환
             iframe = driver.find_element(By.CSS_SELECTOR, "#entryIframe")
@@ -187,7 +183,7 @@ def crawling_rst_and_save(driver, q_, path):
             driver.switch_to.default_content()
             iframe = driver.find_element(By.CSS_SELECTOR, "iframe#searchIframe")
             driver.switch_to.frame(iframe)
-            time.sleep(random.uniform(1, 3))
+            time.sleep(random.uniform(1, 2))
             print('----------------------------------------------------------------------------------------------------------------')
             print()
 
@@ -246,7 +242,7 @@ query = regions[0] + " " + words[0]
 # 저장할 파일의 경로 설정
 path = "E:/MOON/capstone_data"  # E 드라이브의 MOON 폴더 경로. 데이터를 저장해줄 경로
 
-for region in regions[:1]:
+for region in regions[1:2]:
     for word in words:
         query = region + " " + word
         q_ = region + "_" + word
@@ -260,7 +256,7 @@ for region in regions[:1]:
         # 지도가 아닌 검색 탭의 iframe으로 전환
         iframe = driver.find_element(By.CSS_SELECTOR, "iframe#searchIframe")
         driver.switch_to.frame(iframe)
-        time.sleep(3)
+        time.sleep(2.5)
         print("iframe 전환")
 
         # query에 대한 정보 수집과 csv파일 저장까지 완료
