@@ -47,7 +47,7 @@ def find_show_more():
 def crawl_review(driver, rst_name):
     user = driver.find_element(By.CSS_SELECTOR, ".P9EZi").text                                  # 유저 이름
 
-    time.sleep(1)
+    time.sleep(0.5)
 
     # 리뷰 텍스트 전체보기 클릭
     try:
@@ -92,11 +92,11 @@ def crawl_review_info(rst_name):
     except:
         return []
 
-    tag = 1
-    while tag != -1:
-        tag = find_show_more()                                                                  # 끝까지 '더보기' 버튼 클릭
+    # tag = 1
+    # while tag != -1:
+    #     tag = find_show_more()                                                                  # 끝까지 '더보기' 버튼 클릭
     print("\n리뷰 전체 로드 완료\n")
-    print("---------------------------------------------------------------------------------")
+    print("----------------------------------------------------------------------------------------------------")
 
     results = []                                                                                # 레스토랑 하나 당 결과를 담을 리스트
     reviews = driver.find_elements(By.CSS_SELECTOR, ".owAeM")
@@ -107,15 +107,16 @@ def crawl_review_info(rst_name):
         result = crawl_review(review, rst_name)
         results.append(result)
 
-        if i % 30 == 0:
+        if i % 30 == 1:
             print(f"{i}번째 리뷰 수집 완료입니다")
             print(result)
             print()
+            time.sleep(random.uniform(0, 0.2))
 
-        time.sleep(1)
+        time.sleep(0.1)
     print("리뷰 전체 수집 완료")
     
-    return results  
+    return results[1:]
 
 def switch_to_search_iframe(driver):
     # 지도가 아닌 검색 탭의 iframe으로 전환
@@ -134,6 +135,11 @@ def switch_to_info_iframe(driver):
     driver.switch_to.frame(iframe)
     time.sleep(1)
 
+def convert_seconds(seconds):
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return hours, minutes, seconds
+
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
@@ -150,35 +156,41 @@ chrome_options.add_experimental_option("detach", True)
 # 불필요한 에러 메시지 삭제
 chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
-print("Let's Start-!!")
-
 
 # 저장할 파일의 경로 설정
-# E 드라이브의 MOON 폴더 경로. 데이터를 저장해줄 경로
-path = "E:/MOON/capstone_data"  
+# E 드라이브의 MOON 폴더 경로. 데이터를 불러오고 저장해줄 경로
+folder_path = "E:/MOON/capstone_data"
+file_name = "자양동_음식점"
+csv_path = os.path.join(folder_path, f"restaurant_{file_name}_naver.csv")
 
-# data load
-data = pd.read_csv(path + "/restaurant_자양동_음식점_naver.csv")
+# Load data
+data = pd.read_csv(csv_path)
 urls = data['url']
 
-url = urls[0]
+# Open Chrome driver
+print("Open Driver")
 driver = webdriver.Chrome(service=Service(chrome_driver_path), options=chrome_options)
-driver.get(url)
 driver.maximize_window()
-time.sleep(4)
+time.sleep(10)
+print("Driver Opend\n\n")
 
-# urls 리스트에서 첫 번째 요소는 이미 열렸으므로 두 번째 요소부터 처리
+# 크롤링 시작 시간 기록
+start_time = time.time()
+
+# 리뷰 정보 담을 리스트
 results = []
 
-switch_to_search_iframe(driver)
+print("Let's Start-!!\n")
 # urls 리스트에서 첫 번째 요소는 이미 열렸으므로 두 번째 요소부터 처리
-for url in urls[1:]:
+for url in urls[:3]:
+    driver.get(url)
+    time.sleep(3)
+
     # 식당 정보 iframe 전환
     switch_to_info_iframe(driver)
 
     # 이름 정보 수집
     name = driver.find_element(By.CSS_SELECTOR, ".Fc1rA").text
-    
     print("===================================================================================================")
     print("Restaurant Name\n")
     print(name)
@@ -186,10 +198,24 @@ for url in urls[1:]:
 
     # 리뷰 정보 수집
     result = crawl_review_info(name)
-    results.extend(result)             
+    results.extend(result)
 
-    driver.get(url)
-    time.sleep(3.5)
+print()
+print("====================================================  Done  ============================================================")
+print()
+for _ in range(2):
+    print("========================================================================================================================")
+print()
+print()
+
+# 크롤링 종료 시간 기록
+end_time = time.time()
+# 크롤링 소요 시간 계산
+elapsed_time = end_time - start_time
+hours, minutes, seconds = convert_seconds(elapsed_time)
+# 결과 출력
+print("크롤링 소요 시간: {}시간 {}분 {}초\n".format(int(hours), int(minutes), int(seconds)))
+
 
 # 마지막 탭 닫기
 driver.close()
@@ -197,4 +223,15 @@ driver.close()
  # 리뷰 스키마
 rev_cols = ['rst_name', 'user_name', 'review_text', 'u_rst_tag', 'ate_menus', 'date', 'platform']
 df_review = pd.DataFrame(results, columns=rev_cols)
-df_review.to_csv(path + f"/review_test2.csv", encoding='utf-8-sig')
+
+# 파일 경로와 파일명 설정
+file_name = "자양동_음식점"
+file_path = os.path.join(folder_path, f"review_{file_name}_naver.csv")
+
+# info.csv 파일이 이미 존재하는지 확인하고 파일이 없으면 새로 생성하고 있으면 덮어쓰기
+if not os.path.exists(file_path):
+    df_review.to_csv(file_path, index=False, encoding='utf-8-sig')
+    print("csv 파일을 생성하였습니다.")
+else:
+    df_review.to_csv(file_path, index=False, encoding='utf-8-sig', mode="a",header=False)
+    print("csv 파일을 이어붙였습니다.")
