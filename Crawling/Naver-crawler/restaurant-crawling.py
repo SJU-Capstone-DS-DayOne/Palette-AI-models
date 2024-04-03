@@ -241,7 +241,7 @@ words = ['음식점', '카페', '술집']
 # 저장할 파일의 경로 설정
 path = "E:/MOON/capstone_data"  # E 드라이브의 MOON 폴더 경로. 데이터를 저장해줄 경로
 
-for region in regions[3:5]:
+for region in regions[6:7]:
     for word in words:
         query = "광진구 " + region + " " + word
         q_ = region + "_" + word
