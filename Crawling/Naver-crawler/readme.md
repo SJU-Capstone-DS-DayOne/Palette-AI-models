@@ -1,6 +1,6 @@
 ## review-crawling.py 사용방법
 
-! -- 이 py파일은 restaurant-crawling.py에서 얻은 음식점, 카페, 술집 csv 데이터를 바탕으로 합니다 --
+! -- 이 py파일은 restaurant-crawling.py에서 얻은 음식점, 카페, 술집 csv 데이터를 바탕으로 합니다 -- !
 
 1. 터미널을 열고 Team-Model\Crawling 경로로 들어갑니다.
 2. vscode에서 176line에 데이터를 저장했었던 그리고 앞으로도 저장할 경로를 설정한다.
