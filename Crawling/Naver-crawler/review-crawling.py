@@ -32,8 +32,9 @@ def remove_emoji(text):
 def find_show_more():
     try:
         # '더보기' 버튼을 찾음
-        show_more_button = WebDriverWait(driver, 2).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, '.TeItc'))
+        b_tag = "#app-root > div > div > div > div:nth-child(6) > div:nth-child(3) > div.place_section.k1QQ5 > div.NSTUp > div > a > span"
+        show_more_button = WebDriverWait(driver, 6).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, b_tag))
         )
         # 버튼 클릭
         show_more_button.click()
@@ -44,15 +45,21 @@ def find_show_more():
         # 더 이상 '더보기' 버튼이 없으면 반복 종료
         return -1
 
+def scroll_up():
+    # 페이지 위로 스크롤
+    driver.execute_script("arguments[0].scrollTop = 0;", driver.find_element(By.CSS_SELECTOR, ".place_section_header"))
+    time.sleep(1)
+
 def crawl_review(driver, rst_name):
     user = driver.find_element(By.CSS_SELECTOR, ".P9EZi").text                                  # 유저 이름
 
-    time.sleep(0.5)
+    time.sleep(0.05)
 
     # 리뷰 텍스트 전체보기 클릭
     try:
         more_button = driver.find_element(By.CSS_SELECTOR, ".WPk67")
         more_button.click()
+        time.sleep(0.1)
     except:
         pass
     
@@ -88,27 +95,34 @@ def crawl_review_info(rst_name):
                 review_button = tab
                 break                                                                           # 리뷰 버튼 클릭
         review_button.click()
-        time.sleep(1.5)
+        time.sleep(1)
     except:
         return []
 
-    # tag = 1
+    tag = 1
     # while tag != -1:
-    #     tag = find_show_more()                                                                  # 끝까지 '더보기' 버튼 클릭
+    for _ in range(150):
+        tag = find_show_more()   
+        if tag == -1:
+            break                                                               
+        # 끝까지 '더보기' 버튼 클릭
+    
     print("\n리뷰 전체 로드 완료\n")
-    print("----------------------------------------------------------------------------------------------------")
+    print("---------------------------------------------------------------------------------------------------")
+    time.sleep(0.05)
 
     results = []                                                                                # 레스토랑 하나 당 결과를 담을 리스트
     reviews = driver.find_elements(By.CSS_SELECTOR, ".owAeM")
+    time.sleep(2)
 
     print("Review Info\n")
     print(f"해당 식당의 리뷰 개수는 {len(reviews)}입니다\n")
-    for i, review in enumerate(reviews[:3]):
+    for i, review in enumerate(reviews):
         result = crawl_review(review, rst_name)
         results.append(result)
 
-        if i % 30 == 1:
-            print(f"{i}번째 리뷰 수집 완료입니다")
+        if i % 30 == 0:
+            print(f"{i + 1}번째 리뷰")
             print(result)
             print()
             time.sleep(random.uniform(0, 0.2))
@@ -116,7 +130,7 @@ def crawl_review_info(rst_name):
         time.sleep(0.1)
     print("리뷰 전체 수집 완료")
     
-    return results[1:]
+    return results
 
 def switch_to_search_iframe(driver):
     # 지도가 아닌 검색 탭의 iframe으로 전환
@@ -171,7 +185,7 @@ urls = data['url']
 print("Open Driver")
 driver = webdriver.Chrome(service=Service(chrome_driver_path), options=chrome_options)
 driver.maximize_window()
-time.sleep(10)
+time.sleep(5)
 print("Driver Opend\n\n")
 
 # 크롤링 시작 시간 기록
@@ -182,14 +196,14 @@ results = []
 
 print("Let's Start-!!\n")
 # urls 리스트에서 첫 번째 요소는 이미 열렸으므로 두 번째 요소부터 처리
-for url in urls[:3]:
+for url in urls[5:7]:
     driver.get(url)
-    time.sleep(3)
+    time.sleep(4)
 
     # 식당 정보 iframe 전환
     switch_to_info_iframe(driver)
 
-    # 이름 정보 수집
+    # 식당 이름 정보 수집
     name = driver.find_element(By.CSS_SELECTOR, ".Fc1rA").text
     print("===================================================================================================")
     print("Restaurant Name\n")
@@ -225,7 +239,6 @@ rev_cols = ['rst_name', 'user_name', 'review_text', 'u_rst_tag', 'ate_menus', 'd
 df_review = pd.DataFrame(results, columns=rev_cols)
 
 # 파일 경로와 파일명 설정
-file_name = "자양동_음식점"
 file_path = os.path.join(folder_path, f"review_{file_name}_naver.csv")
 
 # info.csv 파일이 이미 존재하는지 확인하고 파일이 없으면 새로 생성하고 있으면 덮어쓰기
