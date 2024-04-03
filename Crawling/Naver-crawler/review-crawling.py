@@ -196,7 +196,7 @@ results = []
 
 print("Let's Start-!!\n")
 # urls 리스트에서 첫 번째 요소는 이미 열렸으므로 두 번째 요소부터 처리
-for url in urls[:4]:
+for url in urls[4:5]:
     driver.get(url)
     time.sleep(4)
 
@@ -239,7 +239,6 @@ rev_cols = ['rst_name', 'user_name', 'review_text', 'u_rst_tag', 'ate_menus', 'd
 df_review = pd.DataFrame(results, columns=rev_cols)
 
 # 파일 경로와 파일명 설정
-file_name = "자양동_음식점"
 file_path = os.path.join(folder_path, f"review_{file_name}_naver.csv")
 
 # info.csv 파일이 이미 존재하는지 확인하고 파일이 없으면 새로 생성하고 있으면 덮어쓰기
