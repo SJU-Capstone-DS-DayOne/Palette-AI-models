@@ -196,7 +196,7 @@ results = []
 
 print("Let's Start-!!\n")
 # urls 리스트에서 첫 번째 요소는 이미 열렸으므로 두 번째 요소부터 처리
-for url in urls[4:5]:
+for url in urls[5:7]:
     driver.get(url)
     time.sleep(4)
 
@@ -232,7 +232,7 @@ print("크롤링 소요 시간: {}시간 {}분 {}초\n".format(int(hours), int(m
 
 
 # 마지막 탭 닫기
-# driver.close()
+driver.close()
 
  # 리뷰 스키마
 rev_cols = ['rst_name', 'user_name', 'review_text', 'u_rst_tag', 'ate_menus', 'date', 'platform']
