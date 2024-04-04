@@ -7,11 +7,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from bs4 import BeautifulSoup
 import pandas as pd
 from datetime import datetime
 import os
-import requests
 import re
 from time import sleep
 import random
@@ -33,12 +31,12 @@ def find_show_more():
     try:
         # '더보기' 버튼을 찾음
         b_tag = "#app-root > div > div > div > div:nth-child(6) > div:nth-child(3) > div.place_section.k1QQ5 > div.NSTUp > div > a > span"
-        show_more_button = WebDriverWait(driver, 6).until(
+        show_more_button = WebDriverWait(driver, 4.5).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, b_tag))
         )
         # 버튼 클릭
         show_more_button.click()
-        time.sleep(2)
+        time.sleep(1)
 
         return 1
     except:
@@ -101,7 +99,7 @@ def crawl_review_info(rst_name):
 
     tag = 1
     # while tag != -1:
-    for _ in range(150):
+    for _ in range(70):
         tag = find_show_more()   
         if tag == -1:
             break                                                               
@@ -154,6 +152,21 @@ def convert_seconds(seconds):
     minutes, seconds = divmod(remainder, 60)
     return hours, minutes, seconds
 
+def save(file_path):
+    # 리뷰 스키마
+    rev_cols = ['rst_name', 'user_name', 'review_text', 'u_rst_tag', 'ate_menus', 'date', 'platform']
+    df_review = pd.DataFrame(results, columns=rev_cols)
+
+    # 파일 경로와 파일명 받아 저장
+
+    # info.csv 파일이 이미 존재하는지 확인하고 파일이 없으면 새로 생성하고 있으면 덮어쓰기
+    if not os.path.exists(file_path):
+        df_review.to_csv(file_path, index=False, encoding='utf-8-sig')
+        print("csv 파일을 생성하였습니다.")
+    else:
+        df_review.to_csv(file_path, index=False, encoding='utf-8-sig', mode="a",header=False)
+        print("csv 파일을 이어붙였습니다.")
+
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
@@ -173,19 +186,23 @@ chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
 # 저장할 파일의 경로 설정
 # E 드라이브의 MOON 폴더 경로. 데이터를 불러오고 저장해줄 경로
-folder_path = "E:/MOON/capstone_data"
-file_name = "자양동_음식점"
-csv_path = os.path.join(folder_path, f"restaurant_{file_name}_naver.csv")
+folder_path = "C:/Users/Administrator/capstone-ds/data"
+file_names = ['광진구음식점', '광진구카페', '광진구술집']
+file_name = file_names[0]
+# csv_path = os.path.join(folder_path, f"df_{file_name}_cleaned.csv")
 
 # Load data
-data = pd.read_csv(csv_path)
+data = pd.read_csv(folder_path + f"/df_{file_name}_cleaned.csv", encoding='utf-8-sig')
 urls = data['url']
+
+# 저장할 파일의 이름
+file_path = folder_path + f"/review_{file_name}.csv"
 
 # Open Chrome driver
 print("Open Driver")
 driver = webdriver.Chrome(service=Service(chrome_driver_path), options=chrome_options)
 driver.maximize_window()
-time.sleep(5)
+time.sleep(3)
 print("Driver Opend\n\n")
 
 # 크롤링 시작 시간 기록
@@ -195,10 +212,10 @@ start_time = time.time()
 results = []
 
 print("Let's Start-!!\n")
-# urls 리스트에서 첫 번째 요소는 이미 열렸으므로 두 번째 요소부터 처리
-for url in urls[5:7]:
+
+for url in urls[:100]:
     driver.get(url)
-    time.sleep(4)
+    time.sleep(3.5)
 
     # 식당 정보 iframe 전환
     switch_to_info_iframe(driver)
@@ -211,8 +228,12 @@ for url in urls[5:7]:
     print()
 
     # 리뷰 정보 수집
-    result = crawl_review_info(name)
-    results.extend(result)
+    try:
+        result = crawl_review_info(name)
+        results.extend(result)
+    except:
+        # 중간에 튕긴 경우 지금까지 수집한 것들만 저장
+        save(file_path)
 
 print()
 print("====================================================  Done  ============================================================")
@@ -234,17 +255,4 @@ print("크롤링 소요 시간: {}시간 {}분 {}초\n".format(int(hours), int(m
 # 마지막 탭 닫기
 driver.close()
 
- # 리뷰 스키마
-rev_cols = ['rst_name', 'user_name', 'review_text', 'u_rst_tag', 'ate_menus', 'date', 'platform']
-df_review = pd.DataFrame(results, columns=rev_cols)
-
-# 파일 경로와 파일명 설정
-file_path = os.path.join(folder_path, f"review_{file_name}_naver.csv")
-
-# info.csv 파일이 이미 존재하는지 확인하고 파일이 없으면 새로 생성하고 있으면 덮어쓰기
-if not os.path.exists(file_path):
-    df_review.to_csv(file_path, index=False, encoding='utf-8-sig')
-    print("csv 파일을 생성하였습니다.")
-else:
-    df_review.to_csv(file_path, index=False, encoding='utf-8-sig', mode="a",header=False)
-    print("csv 파일을 이어붙였습니다.")
+save(file_path)
