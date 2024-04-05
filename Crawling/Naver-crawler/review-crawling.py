@@ -33,12 +33,12 @@ def find_show_more():
     try:
         # '더보기' 버튼을 찾음
         b_tag = "#app-root > div > div > div > div:nth-child(6) > div:nth-child(3) > div.place_section.k1QQ5 > div.NSTUp > div > a > span"
-        show_more_button = WebDriverWait(driver, 6).until(
+        show_more_button = WebDriverWait(driver, 3.5).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, b_tag))
         )
         # 버튼 클릭
         show_more_button.click()
-        time.sleep(2)
+        time.sleep(1.23)
 
         return 1
     except:
@@ -196,7 +196,7 @@ results = []
 
 print("Let's Start-!!\n")
 # urls 리스트에서 첫 번째 요소는 이미 열렸으므로 두 번째 요소부터 처리
-for url in urls[5:7]:
+for url in urls[8:9]:
     driver.get(url)
     time.sleep(4)
 
