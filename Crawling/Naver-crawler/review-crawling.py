@@ -31,12 +31,12 @@ def find_show_more():
     try:
         # '더보기' 버튼을 찾음
         b_tag = "#app-root > div > div > div > div:nth-child(6) > div:nth-child(3) > div.place_section.k1QQ5 > div.NSTUp > div > a > span"
-        show_more_button = WebDriverWait(driver, 4.5).until(
+        show_more_button = WebDriverWait(driver, 7).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, b_tag))
         )
         # 버튼 클릭
         show_more_button.click()
-        time.sleep(1)
+        time.sleep(0.8)
 
         return 1
     except:
@@ -93,13 +93,14 @@ def crawl_review_info(rst_name):
                 review_button = tab
                 break                                                                           # 리뷰 버튼 클릭
         review_button.click()
-        time.sleep(1)
+        time.sleep(1.3)
     except:
         return []
 
+    time.sleep(0.01)
     tag = 1
     # while tag != -1:
-    for _ in range(70):
+    for _ in range(100):
         tag = find_show_more()   
         if tag == -1:
             break                                                               
@@ -111,7 +112,7 @@ def crawl_review_info(rst_name):
 
     results = []                                                                                # 레스토랑 하나 당 결과를 담을 리스트
     reviews = driver.find_elements(By.CSS_SELECTOR, ".owAeM")
-    time.sleep(2)
+    time.sleep(1)
 
     print("Review Info\n")
     print(f"해당 식당의 리뷰 개수는 {len(reviews)}입니다\n")
@@ -125,7 +126,7 @@ def crawl_review_info(rst_name):
             print()
             time.sleep(random.uniform(0, 0.2))
 
-        time.sleep(0.1)
+        time.sleep(0.05)
     print("리뷰 전체 수집 완료")
     
     return results
@@ -153,6 +154,9 @@ def convert_seconds(seconds):
     return hours, minutes, seconds
 
 def save(file_path):
+    global results
+
+    print(f"\n현재까지 수집한 리뷰 개수 = {len(results)}\n")
     # 리뷰 스키마
     rev_cols = ['rst_name', 'user_name', 'review_text', 'u_rst_tag', 'ate_menus', 'date', 'platform']
     df_review = pd.DataFrame(results, columns=rev_cols)
@@ -166,6 +170,21 @@ def save(file_path):
     else:
         df_review.to_csv(file_path, index=False, encoding='utf-8-sig', mode="a",header=False)
         print("csv 파일을 이어붙였습니다.")
+    
+    # 중복된 리뷰 저장 방지 위해 리스트 비워주기
+    results = []
+
+def close_dummy_tab(driver):
+    # 열려있는 탭 카운팅
+    tab_handles = driver.window_handles
+
+    if len(tab_handles) > 1:
+        for handle in tab_handles[1:]:
+            driver.switch_to.window(handle)
+            driver.close()
+
+    # 다시 첫번째 탭으로 돌아오기
+    driver.switch_to.window(tab_handles[0])
 
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
@@ -213,7 +232,9 @@ results = []
 
 print("Let's Start-!!\n")
 
-for url in urls[:100]:
+start = 1
+end = 50
+for i, url in enumerate(urls[start:end]):
     driver.get(url)
     time.sleep(3.5)
 
@@ -223,7 +244,7 @@ for url in urls[:100]:
     # 식당 이름 정보 수집
     name = driver.find_element(By.CSS_SELECTOR, ".Fc1rA").text
     print("===================================================================================================")
-    print("Restaurant Name\n")
+    print(f"Restaurant Name_{start + i}\n")
     print(name)
     print()
 
@@ -234,6 +255,11 @@ for url in urls[:100]:
     except:
         # 중간에 튕긴 경우 지금까지 수집한 것들만 저장
         save(file_path)
+
+    # 다섯번째마다 저장하여 메모리 저장량도 아끼고 혹시 모를 에러에 대응
+    if i % 5 == 0:
+        save(file_path)
+    
 
 print()
 print("====================================================  Done  ============================================================")
@@ -255,4 +281,5 @@ print("크롤링 소요 시간: {}시간 {}분 {}초\n".format(int(hours), int(m
 # 마지막 탭 닫기
 driver.close()
 
-save(file_path)
+if len(results > 0):
+    save(file_path)
