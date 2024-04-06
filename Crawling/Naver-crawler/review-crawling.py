@@ -93,7 +93,7 @@ def crawl_review_info(rst_name):
                 review_button = tab
                 break                                                                           # 리뷰 버튼 클릭
         review_button.click()
-        time.sleep(1.3)
+        time.sleep(2.1)
     except:
         return []
 
