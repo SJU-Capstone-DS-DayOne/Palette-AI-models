@@ -205,7 +205,11 @@ chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
 # 저장할 파일의 경로 설정
 # E 드라이브의 MOON 폴더 경로. 데이터를 불러오고 저장해줄 경로
-folder_path = "C:/Users/Administrator/capstone-ds/data"
+# folder_path = "C:/Users/Administrator/capstone-ds/data"
+
+# git에 데이터 올려놓고 실습실에서 불러올 때 쓰려함
+folder_path = "../data"
+
 file_names = ['광진구음식점', '광진구카페', '광진구술집']
 file_name = file_names[0]
 # csv_path = os.path.join(folder_path, f"df_{file_name}_cleaned.csv")
