@@ -36,7 +36,7 @@ def find_show_more():
         )
         # 버튼 클릭
         show_more_button.click()
-        time.sleep(0.8)
+        time.sleep(1.5)
 
         return 1
     except:
@@ -57,7 +57,7 @@ def crawl_review(driver, rst_name):
     try:
         more_button = driver.find_element(By.CSS_SELECTOR, ".WPk67")
         more_button.click()
-        time.sleep(0.1)
+        time.sleep(0.5)
     except:
         pass
     
@@ -93,7 +93,7 @@ def crawl_review_info(rst_name):
                 review_button = tab
                 break                                                                           # 리뷰 버튼 클릭
         review_button.click()
-        time.sleep(2.1)
+        time.sleep(2.5)
     except:
         return []
 
@@ -174,18 +174,6 @@ def save(file_path):
     # 중복된 리뷰 저장 방지 위해 리스트 비워주기
     results = []
 
-def close_dummy_tab(driver):
-    # 열려있는 탭 카운팅
-    tab_handles = driver.window_handles
-
-    if len(tab_handles) > 1:
-        for handle in tab_handles[1:]:
-            driver.switch_to.window(handle)
-            driver.close()
-
-    # 다시 첫번째 탭으로 돌아오기
-    driver.switch_to.window(tab_handles[0])
-
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
@@ -218,8 +206,6 @@ file_name = file_names[0]
 data = pd.read_csv(folder_path + f"/df_{file_name}_cleaned.csv", encoding='utf-8-sig')
 urls = data['url']
 
-# 저장할 파일의 이름
-file_path = folder_path + f"/review_{file_name}.csv"
 
 # Open Chrome driver
 print("Open Driver")
@@ -236,8 +222,13 @@ results = []
 
 print("Let's Start-!!\n")
 
+# 시작과 끝 번호를 지정해주세요. 이는 파일 저장할 때에도 적용됩니다
 start = 1
 end = 50
+
+# 저장할 파일의 이름
+file_path = folder_path + f"/review_{file_name}_{start}_{end-1}.csv"
+
 for i, url in enumerate(urls[start:end]):
     driver.get(url)
     time.sleep(3.5)
@@ -285,5 +276,5 @@ print("크롤링 소요 시간: {}시간 {}분 {}초\n".format(int(hours), int(m
 # 마지막 탭 닫기
 driver.close()
 
-if len(results > 0):
+if len(results) > 0:
     save(file_path)
