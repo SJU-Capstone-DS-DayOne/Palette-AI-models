@@ -31,7 +31,7 @@ def find_show_more():
     try:
         # '더보기' 버튼을 찾음
         b_tag = "#app-root > div > div > div > div:nth-child(6) > div:nth-child(3) > div.place_section.k1QQ5 > div.NSTUp > div > a > span"
-        show_more_button = WebDriverWait(driver, 7).until(
+        show_more_button = WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, b_tag))
         )
         # 버튼 클릭
@@ -51,7 +51,7 @@ def scroll_up():
 def crawl_review(driver, rst_name):
     user = driver.find_element(By.CSS_SELECTOR, ".P9EZi").text                                  # 유저 이름
 
-    time.sleep(0.05)
+    time.sleep(0.1)
 
     # 리뷰 텍스트 전체보기 클릭
     try:
@@ -93,15 +93,16 @@ def crawl_review_info(rst_name):
                 review_button = tab
                 break                                                                           # 리뷰 버튼 클릭
         review_button.click()
-        time.sleep(2.5)
+        time.sleep(5)
     except:
         return []
 
-    time.sleep(0.01)
+    time.sleep(0.1)
     tag = 1
     # while tag != -1:
     for _ in range(100):
-        tag = find_show_more()   
+        tag = find_show_more()
+        time.sleep(0.1)   
         if tag == -1:
             break                                                               
         # 끝까지 '더보기' 버튼 클릭
@@ -223,6 +224,7 @@ results = []
 print("Let's Start-!!\n")
 
 # 시작과 끝 번호를 지정해주세요. 이는 파일 저장할 때에도 적용됩니다
+# 음식점 1239, 카페 1241, 술집 718
 start = 1
 end = 50
 
@@ -237,7 +239,11 @@ for i, url in enumerate(urls[start:end]):
     switch_to_info_iframe(driver)
 
     # 식당 이름 정보 수집
-    name = driver.find_element(By.CSS_SELECTOR, ".Fc1rA").text
+    try:
+        name = driver.find_element(By.CSS_SELECTOR, ".Fc1rA").text
+    except:
+        # 진행중 식당 정보가 사라진 url 발견됨. 넘겨서 해결
+        continue
     print("===================================================================================================")
     print(f"Restaurant Name_{start + i}\n")
     print(name)
