@@ -237,14 +237,13 @@ chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
 print("Let's Start-!!")
 regions = ['중곡동', '군자동', '능동', '화양동', '자양동', '구의동', '광장동']
 words = ['음식점', '카페', '술집']
-query = regions[0] + " " + words[0]
 
 # 저장할 파일의 경로 설정
 path = "E:/MOON/capstone_data"  # E 드라이브의 MOON 폴더 경로. 데이터를 저장해줄 경로
 
-for region in regions[1:2]:
+for region in regions[6:7]:
     for word in words:
-        query = region + " " + word
+        query = "광진구 " + region + " " + word
         q_ = region + "_" + word
 
         url = f"https://map.naver.com/p/search/{query}"

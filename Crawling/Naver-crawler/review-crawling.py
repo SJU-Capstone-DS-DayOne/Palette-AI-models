@@ -7,109 +7,15 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from bs4 import BeautifulSoup
 import pandas as pd
 from datetime import datetime
 import os
-import requests
 import re
 from time import sleep
 import random
 
 
 # 네이버 플레이스 함수
-def scroll_down():
-    # 한 번에 10개의 식당이 나오고, 스크롤 시 동적으로 추가되어 총 50개까지 한 페이지 안에 나온다
-    for i in range(4):
-        # 페이지 아래로 스크롤
-        driver.execute_script("arguments[0].scrollTo(0, arguments[0].scrollHeight);", driver.find_element(By.CSS_SELECTOR, "#_pcmap_list_scroll_container"))
-        time.sleep(3)
-
-def next_page():
-
-    # '>' 버튼 찾기
-    next_button = driver.find_elements(By.CSS_SELECTOR, ".eUTV2")[-1]
-    if next_button.get_attribute("aria-disabled") == 'true':
-        print("Last Page")
-        return -1
-
-    else:
-        next_button.click()
-        # print("click")
-
-    time.sleep(3)
-
-# 식당정보 수집
-def crawl_rst_info(word):
-    try:
-        rst_name = driver.find_element(By.CSS_SELECTOR, ".Fc1rA").text              # 식당이름
-    except:
-        rst_name = None
-    try:
-        rst_category =  driver.find_element(By.CSS_SELECTOR, ".DJJvD").text         # 식당 카테고리
-    except:
-        rst_category = None
-    try:
-        rst_address =  driver.find_element(By.CSS_SELECTOR, ".LDgIH").text          # 식당 주소
-    except:
-        rst_address = None
-    try:
-        rst_number = driver.find_element(By.CSS_SELECTOR, ".xlx7Q").text            # 식당 전화번호
-    except:
-        rst_number = None
-
-    try:
-        time_button = driver.find_elements(By.CSS_SELECTOR, "._UCia")[1].click()        # 식당 시간 더보기 버튼 클릭
-        time.sleep(3)
-        rst_times =  driver.find_elements(By.CSS_SELECTOR, ".A_cdD")[1:]                # 요일별 영업시간들
-        times = []
-        for rst_time in rst_times:
-            times.append(rst_time.text.replace("\n", " "))
-    except:
-        times = None
-
-
-
-    tabs = driver.find_elements(By.CSS_SELECTOR, "._tab-menu")
-    for tab in tabs:
-        if tab.text == '메뉴':
-            menu_button = tab                                                       # 메뉴 정보 수집
-
-    menu_button.click()
-    time.sleep(1)
-    menus_tab = driver.find_elements(By.CSS_SELECTOR, ".E2jtL")
-    
-    menu_li = []
-    price_li = []
-    rst_li = []
-    for menu in menus_tab:
-        try:
-            title = menu.find_element(By.CSS_SELECTOR, ".lPzHi").text
-        except:
-            title = None
-        try:
-            price = menu.find_element(By.CSS_SELECTOR, ".GXS1X")
-            price = price.find_element(By.TAG_NAME, "em").text                      # 가격 정보 함께 수집
-        except:
-            price = None
-
-        rst_li.append(rst_name)
-        menu_li.append(title)
-        price_li.append(price)
-        
-
-    print(rst_name)       # clear
-    print(rst_category)   # clear
-    print(rst_address)    # clear
-    print(rst_number)     # clear
-    print(times)          # clear
-    print(menu_li)        # clear
-    print(price_li)       # clear
-
-    rst_info = [rst_name, word, rst_category, rst_address, times, rst_number, 0]
-
-    return rst_info, rst_li, menu_li, price_li
-
 def remove_emoji(text):
     # 이모지 패턴 정규 표현식
     emoji_pattern = re.compile("["
@@ -124,27 +30,34 @@ def remove_emoji(text):
 def find_show_more():
     try:
         # '더보기' 버튼을 찾음
-        show_more_button = WebDriverWait(driver, 2).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, '.TeItc'))
+        b_tag = "#app-root > div > div > div > div:nth-child(6) > div:nth-child(3) > div.place_section.k1QQ5 > div.NSTUp > div > a > span"
+        show_more_button = WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, b_tag))
         )
         # 버튼 클릭
         show_more_button.click()
-        time.sleep(2)
+        time.sleep(1.5)
 
         return 1
     except:
         # 더 이상 '더보기' 버튼이 없으면 반복 종료
         return -1
 
+def scroll_up():
+    # 페이지 위로 스크롤
+    driver.execute_script("arguments[0].scrollTop = 0;", driver.find_element(By.CSS_SELECTOR, ".place_section_header"))
+    time.sleep(1)
+
 def crawl_review(driver, rst_name):
     user = driver.find_element(By.CSS_SELECTOR, ".P9EZi").text                                  # 유저 이름
 
-    time.sleep(1)
+    time.sleep(0.1)
 
-    # 리뷰 전체보기 클릭
+    # 리뷰 텍스트 전체보기 클릭
     try:
         more_button = driver.find_element(By.CSS_SELECTOR, ".WPk67")
         more_button.click()
+        time.sleep(0.5)
     except:
         pass
     
@@ -161,7 +74,7 @@ def crawl_review(driver, rst_name):
         for tag in tags:
             u_rst_tag.append(tag.text)
     except:
-        pass
+        tags = None
     
     try:
         date = driver.find_element(By.CSS_SELECTOR, ".CKUdu time").text                         # 리뷰 남긴 날짜
@@ -173,142 +86,94 @@ def crawl_review(driver, rst_name):
     return result
 
 def crawl_review_info(rst_name):
-    tabs = driver.find_elements(By.CSS_SELECTOR, "._tab-menu")
-    for tab in tabs:
-        if tab.text == '리뷰':
-            review_button = tab
-            break                                                                                   # 리뷰 정보 수집
-    review_button.click()
-    time.sleep(3)
-    
-    # for i in range(1):
-    #     find_show_more()  # test
-    tag = 1
-    while tag != -1:
-        tag = find_show_more()                                                          # 끝까지 '더보기' 버튼 클릭
-        
-    
-    print("\n리뷰 전체 로드 완료")
-    print()
-    results = []                                                                                    # 레스토랑 하나 당 결과를 담을 리스트
-    reviews = driver.find_elements(By.CSS_SELECTOR, ".owAeM")
+    try:
+        tabs = driver.find_elements(By.CSS_SELECTOR, "._tab-menu")
+        for tab in tabs:
+            if tab.text == '리뷰':
+                review_button = tab
+                break                                                                           # 리뷰 버튼 클릭
+        review_button.click()
+        time.sleep(5)
+    except:
+        return []
 
-    print("Review Info")
-    print()
-    print(f"해당 식당의 리뷰 개수는 {len(reviews)}입니다")
-    print()
+    time.sleep(0.1)
+    tag = 1
+    # while tag != -1:
+    for _ in range(100):
+        tag = find_show_more()
+        time.sleep(0.1)   
+        if tag == -1:
+            break                                                               
+        # 끝까지 '더보기' 버튼 클릭
+    
+    print("\n리뷰 전체 로드 완료\n")
+    print("---------------------------------------------------------------------------------------------------")
+    time.sleep(0.05)
+
+    results = []                                                                                # 레스토랑 하나 당 결과를 담을 리스트
+    reviews = driver.find_elements(By.CSS_SELECTOR, ".owAeM")
+    time.sleep(1)
+
+    print("Review Info\n")
+    print(f"해당 식당의 리뷰 개수는 {len(reviews)}입니다\n")
     for i, review in enumerate(reviews):
         result = crawl_review(review, rst_name)
         results.append(result)
 
         if i % 30 == 0:
-            print(f"{i}번째 리뷰 수집 완료입니다")
+            print(f"{i + 1}번째 리뷰")
             print(result)
             print()
+            time.sleep(random.uniform(0, 0.2))
 
-        time.sleep(1)
+        time.sleep(0.05)
     print("리뷰 전체 수집 완료")
     
-    return results  
+    return results
 
-def crawling_and_save(driver, q_, path):
-    infos, rst_lis, menu_lis, price_lis = [], [], [], []    # 식당에 정보 저장하는 리스트
-    results = []   
+def switch_to_search_iframe(driver):
+    # 지도가 아닌 검색 탭의 iframe으로 전환
+    iframe = driver.find_element(By.CSS_SELECTOR, "iframe#searchIframe")
+    driver.switch_to.frame(iframe)
+    time.sleep(3)
+    print("iframe 전환")
 
-    tag = 1
-    # query에 대해 크롤링 수행
-    while tag != -1:
-        # 밑으로 최대한 내리기
-        scroll_down()
+def switch_to_info_iframe(driver):
+    # 전체 페이지로 복귀하도록 iframe에서 벗어나기 -> 그래야만 새로 생긴 iframe 탭에 접근할 수 있음
+    driver.switch_to.default_content()
+    time.sleep(0.5)
 
-        # 레스토랑 및 리뷰 정보 수집
-        rsts = driver.find_elements(By.CSS_SELECTOR, ".UEzoS")
-        for rst in rsts:
-            rst = rst.find_element(By.CSS_SELECTOR, ".tzwk0")
+    # 새로 생긴 식당 탭 iframe으로 전환
+    iframe = driver.find_element(By.CSS_SELECTOR, "#entryIframe")
+    driver.switch_to.frame(iframe)
+    time.sleep(1)
 
-            # 레스토랑 방문
-            rst.click()
-            time.sleep(2)
+def convert_seconds(seconds):
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return hours, minutes, seconds
 
-            # 전체 페이지로 복귀하도록 iframe에서 벗어나기 -> 그래야만 새로 생긴 iframe 탭에 접근할 수 있음
-            driver.switch_to.default_content()
+def save(file_path):
+    global results
 
-            # 새로 생긴 식당 탭 iframe으로 전환
-            iframe = driver.find_element(By.CSS_SELECTOR, "#entryIframe")
-            driver.switch_to.frame(iframe)
-            time.sleep(2)
-            print("식당 탭 iframe 전환")
-            print('----------------------------------------------------------------------------------------------------------------')
-            print("Restaurant Info")
-            print()
-            """
-            정보 수집
-            """
-            # 크롤링 시작 시간 기록
-            start_time = time.time()
-
-            # 식당 정보 수집
-            info, rst_li, menu_li, price_li = crawl_rst_info(word[0])
-            infos.append(info)              # 식당 정보
-            rst_lis.extend(rst_li)          # 식당 이름 리스트 (식당/메뉴/가격 테이블용)
-            menu_lis.extend(menu_li)
-            price_lis.extend(price_li)
-
-            # 식당에 대한 리뷰 수집
-            time.sleep(3)
-            result = crawl_review_info(info[0])
-            results.extend(result[1:])             # 이유는 모르겠지만 리뷰 중 첫번째가 전체 로드되지 않는 이슈 발생해 첫 번째 제외
-
-            # 크롤링 종료 시간 기록
-            end_time = time.time()
-            # 크롤링 소요 시간 계산
-            elapsed_time = end_time - start_time
-            print("크롤링 소요 시간:", elapsed_time, "초")
-
-            """
-            정보 수집 완료
-            """
-            # iframe 다시 레스토랑 전체 탭으로 복귀
-            driver.switch_to.default_content()
-            iframe = driver.find_element(By.CSS_SELECTOR, "iframe#searchIframe")
-            driver.switch_to.frame(iframe)
-            time.sleep(random.uniform(1, 3))
-            print('----------------------------------------------------------------------------------------------------------------')
-            print()
-
-        # 다음 페이지
-        tag = next_page()
-
-    # 쿼리에 대한 크롤링 정보 저장
-    # 리스트를 데이터프레임으로 변환
-
-    # 식당 스키마
-    rst_cols = ['name', 'category', 'sub_category', 'address', 'opening_hours', 'contact', 'platform']
-    df_rst = pd.DataFrame(infos, columns=rst_cols)
-    df_rst.to_csv(path + f"/restaurant_{q_}.csv", encoding='cp949')
-
-    # 메뉴 스키마
-    menu_cols = ['rst_name', 'menu_name', 'price']
-    rst_menu = pd.DataFrame({menu_cols[0]:rst_lis,
-                            menu_cols[1]:menu_lis,
-                            menu_cols[2]:price_lis})
-    rst_menu.to_csv(path + f"/restaurant_menu_{q_}.csv", encoding='cp949')
-
+    print(f"\n현재까지 수집한 리뷰 개수 = {len(results)}\n")
     # 리뷰 스키마
     rev_cols = ['rst_name', 'user_name', 'review_text', 'u_rst_tag', 'ate_menus', 'date', 'platform']
     df_review = pd.DataFrame(results, columns=rev_cols)
-    df_review.to_csv(path + f"/review.csv_{q_}", encoding='utf-8-sig')
 
-    # iframe에서 벗어나 전체 페이지로 복귀
-    driver.switch_to.default_content()
+    # 파일 경로와 파일명 받아 저장
 
-    print(f"{q_} Done-!!!")
-    print("=========================================================================================================================")
-    print("=========================================================================================================================")
-    print("=========================================================================================================================")
-    print()
-    print()
-    time.sleep(30)
+    # info.csv 파일이 이미 존재하는지 확인하고 파일이 없으면 새로 생성하고 있으면 덮어쓰기
+    if not os.path.exists(file_path):
+        df_review.to_csv(file_path, index=False, encoding='utf-8-sig')
+        print("csv 파일을 생성하였습니다.")
+    else:
+        df_review.to_csv(file_path, index=False, encoding='utf-8-sig', mode="a",header=False)
+        print("csv 파일을 이어붙였습니다.")
+    
+    # 중복된 리뷰 저장 방지 위해 리스트 비워주기
+    results = []
 
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
@@ -326,30 +191,96 @@ chrome_options.add_experimental_option("detach", True)
 # 불필요한 에러 메시지 삭제
 chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
-# 크롬 브라우저를 열고 네이버 맵 keyword로 이동
-print("Let's Start-!!")
-region = ['중곡동', '군자동', '능동', '화양동', '자양동', '구의동', '광장동']
-words = ['음식점', '카페', '술집']
-query = region[0] + " " + words[0]
 
 # 저장할 파일의 경로 설정
-path = "E:/MOON/capstone_data"  # E 드라이브의 MOON 폴더 경로. 데이터를 저장해줄 경로
+# E 드라이브의 MOON 폴더 경로. 데이터를 불러오고 저장해줄 경로
+# folder_path = "C:/Users/Administrator/capstone-ds/data"
 
-for word in words:
-    query = region[0] + " " + word
-    q_ = region[0] + "_" + word
+# git에 데이터 올려놓고 실습실에서 불러올 때 쓰려함
+folder_path = "../data"
 
-    url = f"https://map.naver.com/p/search/{query}"
-    driver = webdriver.Chrome(service=Service(chrome_driver_path), options=chrome_options)
+file_names = ['광진구음식점', '광진구카페', '광진구술집']
+file_name = file_names[0]
+# csv_path = os.path.join(folder_path, f"df_{file_name}_cleaned.csv")
+
+# Load data
+data = pd.read_csv(folder_path + f"/df_{file_name}_cleaned.csv", encoding='utf-8-sig')
+urls = data['url']
+
+
+# Open Chrome driver
+print("Open Driver")
+driver = webdriver.Chrome(service=Service(chrome_driver_path), options=chrome_options)
+driver.maximize_window()
+time.sleep(3)
+print("Driver Opend\n\n")
+
+# 크롤링 시작 시간 기록
+start_time = time.time()
+
+# 리뷰 정보 담을 리스트
+results = []
+
+print("Let's Start-!!\n")
+
+# 시작과 끝 번호를 지정해주세요. 이는 파일 저장할 때에도 적용됩니다
+# 음식점 1239, 카페 1241, 술집 718
+start = 1
+end = 50
+
+# 저장할 파일의 이름
+file_path = folder_path + f"/review_{file_name}_{start}_{end-1}.csv"
+
+for i, url in enumerate(urls[start:end]):
     driver.get(url)
-    driver.maximize_window()
-    time.sleep(5)
+    time.sleep(3.5)
 
-    # 지도가 아닌 검색 탭의 iframe으로 전환
-    iframe = driver.find_element(By.CSS_SELECTOR, "iframe#searchIframe")
-    driver.switch_to.frame(iframe)
-    time.sleep(3)
-    print("iframe 전환")
+    # 식당 정보 iframe 전환
+    switch_to_info_iframe(driver)
 
-    # query에 대한 정보 수집과 csv파일 저장까지 완료
-    crawling_and_save(driver, q_, path)
+    # 식당 이름 정보 수집
+    try:
+        name = driver.find_element(By.CSS_SELECTOR, ".Fc1rA").text
+    except:
+        # 진행중 식당 정보가 사라진 url 발견됨. 넘겨서 해결
+        continue
+    print("===================================================================================================")
+    print(f"Restaurant Name_{start + i}\n")
+    print(name)
+    print()
+
+    # 리뷰 정보 수집
+    try:
+        result = crawl_review_info(name)
+        results.extend(result)
+    except:
+        # 중간에 튕긴 경우 지금까지 수집한 것들만 저장
+        save(file_path)
+
+    # 다섯번째마다 저장하여 메모리 저장량도 아끼고 혹시 모를 에러에 대응
+    if i % 5 == 0:
+        save(file_path)
+    
+
+print()
+print("====================================================  Done  ============================================================")
+print()
+for _ in range(2):
+    print("========================================================================================================================")
+print()
+print()
+
+# 크롤링 종료 시간 기록
+end_time = time.time()
+# 크롤링 소요 시간 계산
+elapsed_time = end_time - start_time
+hours, minutes, seconds = convert_seconds(elapsed_time)
+# 결과 출력
+print("크롤링 소요 시간: {}시간 {}분 {}초\n".format(int(hours), int(minutes), int(seconds)))
+
+
+# 마지막 탭 닫기
+driver.close()
+
+if len(results) > 0:
+    save(file_path)
