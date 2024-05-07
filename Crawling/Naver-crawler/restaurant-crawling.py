@@ -54,6 +54,19 @@ def crawl_rst_info(word):
     except:
         rst_address = None
     try:
+        element =  driver.find_element(By.CSS_SELECTOR, ".nZapA")
+        full_text = element.text
+
+        # nZapa 클래스의 자식 요소들의 텍스트를 찾아 전체 텍스트에서 제거합니다.
+        children = element.find_elements(By.CSS_SELECTOR, ".C6tux")
+        for child in children:
+            full_text = full_text.replace(child.text, '')
+        full_text = full_text.replace('\n미터', '')
+        
+        dist_from_station = full_text
+    except:
+        dist_from_station = None
+    try:
         rst_number = driver.find_element(By.CSS_SELECTOR, ".xlx7Q").text            # 식당 전화번호
         time.sleep(0.5)
     except:
@@ -81,6 +94,7 @@ def crawl_rst_info(word):
         menu_li = []
         price_li = []
         rst_li = []
+        url_li = []
         for menu in menus_tab:
             try:
                 title = menu.find_element(By.CSS_SELECTOR, ".lPzHi").text
@@ -95,6 +109,7 @@ def crawl_rst_info(word):
             rst_li.append(rst_name)
             menu_li.append(title)
             price_li.append(price)
+            url_li.append(link)
             time.sleep(0.3)
     except:
         menu_li = []
@@ -104,14 +119,15 @@ def crawl_rst_info(word):
     print(rst_name)       # clear
     print(rst_category)   # clear
     print(rst_address)    # clear
+    print(dist_from_station)    # clear
     print(rst_number)     # clear
     print(times)          # clear
     print(menu_li)        # clear
     print(price_li)       # clear
 
-    rst_info = [rst_name, word, rst_category, rst_address, rst_number, 0, link, times]
+    rst_info = [rst_name, word, rst_category, rst_address, dist_from_station, rst_number, 0, link, times]
 
-    return rst_info, rst_li, menu_li, price_li
+    return rst_info, rst_li, menu_li, price_li, url_li
 
 def find_show_more():
     try:
@@ -129,7 +145,7 @@ def find_show_more():
         return -1
 
 def crawling_rst_and_save(driver, q_, path):
-    infos, rst_lis, menu_lis, price_lis = [], [], [], []    # 식당에 정보 저장하는 리스트
+    infos, rst_lis, menu_lis, price_lis, url_lis = [], [], [], [], []    # 식당에 정보 저장하는 리스트
 
     tag = 1
     # query에 대해 크롤링 수행
@@ -140,7 +156,7 @@ def crawling_rst_and_save(driver, q_, path):
 
         # 레스토랑 및 리뷰 정보 수집
         rsts = driver.find_elements(By.CSS_SELECTOR, ".UEzoS")
-        for rst in rsts:
+        for rst in rsts[:1]:
             rst = rst.find_element(By.CSS_SELECTOR, ".tzwk0")
 
             # 레스토랑 방문
@@ -170,11 +186,12 @@ def crawling_rst_and_save(driver, q_, path):
                 w = 2
 
             # 식당 정보 수집
-            info, rst_li, menu_li, price_li = crawl_rst_info(w)
+            info, rst_li, menu_li, price_li, url_li = crawl_rst_info(w)
             infos.append(info)              # 식당 정보
             rst_lis.extend(rst_li)          # 식당 이름 리스트 (식당/메뉴/가격 테이블용)
             menu_lis.extend(menu_li)
             price_lis.extend(price_li)
+            url_lis.extend(url_li)          # url 리스트 
 
             """
             정보 수집 완료
@@ -194,15 +211,16 @@ def crawling_rst_and_save(driver, q_, path):
     # 리스트를 데이터프레임으로 변환
 
     # 식당 스키마
-    rst_cols = ['name', 'category', 'sub_category', 'address', 'contact', 'platform', 'url', 'opneing_hours']
+    rst_cols = ['name', 'category', 'sub_category', 'address', 'dist_from_station', 'contact', 'platform', 'url', 'opneing_hours']
     df_rst = pd.DataFrame(infos, columns=rst_cols)
     df_rst.to_csv(path + f"/restaurant_{q_}_naver.csv", encoding='utf-8-sig')
 
     # 메뉴 스키마
-    menu_cols = ['rst_name', 'menu_name', 'price']
+    menu_cols = ['rst_name', 'menu_name', 'price', 'url']
     rst_menu = pd.DataFrame({menu_cols[0]:rst_lis,
                             menu_cols[1]:menu_lis,
-                            menu_cols[2]:price_lis})
+                            menu_cols[2]:price_lis,
+                            menu_cols[3]:url_lis})
     rst_menu.to_csv(path + f"/restaurant_menu_{q_}_naver.csv", encoding='utf-8-sig')
 
     # iframe에서 벗어나 전체 페이지로 복귀
@@ -216,6 +234,7 @@ def crawling_rst_and_save(driver, q_, path):
     print("================================================ 쉬었다 갑니다 ==========================================================\n")
     print()
     time.sleep(20)
+
 
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
@@ -235,15 +254,15 @@ chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
 # 크롬 브라우저를 열고 네이버 맵 keyword로 이동
 print("Let's Start-!!")
-regions = ['중곡동', '군자동', '능동', '화양동', '자양동', '구의동', '광장동']
+regions = ['홍대', '잠실']
 words = ['음식점', '카페', '술집']
 
 # 저장할 파일의 경로 설정
-path = "E:/MOON/capstone_data"  # E 드라이브의 MOON 폴더 경로. 데이터를 저장해줄 경로
+path = "./data/"  # E 드라이브의 MOON 폴더 경로. 데이터를 저장해줄 경로
 
-for region in regions[6:7]:
+for region in regions:
     for word in words:
-        query = "광진구 " + region + " " + word
+        query = region + " " + word
         q_ = region + "_" + word
 
         url = f"https://map.naver.com/p/search/{query}"
