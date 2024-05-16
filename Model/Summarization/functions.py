@@ -35,7 +35,7 @@ def review_table2input(review_table):
     review_table = review_table[['restaurant_id', 'content']]
 
     # 2단어 이상인 리뷰만 선별 (2단어인 이유는 중간발표 appendix. word count 히스토그램 참고)
-    dropped_review_table = drop_short_words(review_table, 10)
+    dropped_review_table = drop_short_words(review_table, 5)
 
     # 'review_text' 열에 정규 표현식 함수 적용
     dropped_review_table['content'] = dropped_review_table['content'].apply(preprocess_emoji)
@@ -156,7 +156,7 @@ def make_menu_list(df_menu):
 def filter_menu_sentences(row):
     # review_sentence_split의 각 문장에 대해
     filtered_sentences = []
-    
+    # print(row)
     sentences = row['review_sentence_split']
     for sentence in sentences:
         # sentence가 menu_name_split의 단어들을 포함하는지 확인
@@ -175,6 +175,27 @@ def filter_non_menu_sentences(row):
             filtered_sentences.append(sentence)
     return filtered_sentences
 
+def return_input_text(summary_input, restaurant_id):
+    
+    try:
+        menu_sentence = summary_input.loc[restaurant_id:restaurant_id, :].apply(filter_menu_sentences, axis=1)
+        menu_sentence = menu_sentence.tolist()[0]
+    except:
+        menu_sentence = []
+    try:
+        non_menu_sentence = summary_input.loc[restaurant_id:restaurant_id, :].apply(filter_non_menu_sentences, axis=1)
+        non_menu_sentence = non_menu_sentence.tolist()[0]
+        top_n_sentences = get_sentiment_dict(non_menu_sentence)
+    except:
+        top_n_sentences = []
+
+    # input text 열 만들기
+    input_text = menu_sentence + top_n_sentences
+
+    document = '. '.join(input_text)
+
+    return document
+
 
 # load model
 tokenizer = AutoTokenizer.from_pretrained("jaehyeong/koelectra-base-v3-generalized-sentiment-analysis")
@@ -186,7 +207,7 @@ def get_sentiment_score(sentence):
     result = sentiment_classifier(sentence)[0]
     return result['score'] if result['label'] == '1' else 1-(result['score'])
 
-def get_sentiment_dict(sentences):
+def get_sentiment_dict(sentences, n=10):
     sentiment_dict = {}
 
     for sentence in sentences:
@@ -197,6 +218,6 @@ def get_sentiment_dict(sentences):
     sorted_sentiment = sorted(sentiment_dict.items(), key=lambda x: x[1], reverse=True)
 
     # 상위 10개의 key를 선택
-    top_10_keys = [item[0] for item in sorted_sentiment[:20]]
+    top_n_keys = [item[0] for item in sorted_sentiment[:n]]
 
-    return top_10_keys
+    return top_n_keys
