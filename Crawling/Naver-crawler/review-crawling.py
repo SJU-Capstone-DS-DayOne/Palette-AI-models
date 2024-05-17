@@ -30,7 +30,8 @@ def remove_emoji(text):
 def find_show_more():
     try:
         # '더보기' 버튼을 찾음
-        b_tag = "#app-root > div > div > div > div:nth-child(6) > div:nth-child(3) > div.place_section.k1QQ5 > div.NSTUp > div > a > span"
+        #app-root > div > div > div > div:nth-child(6) > div:nth-child(2) > div.place_section.k1QQ5 > div.NSTUp > div > a > span
+        b_tag = "#app-root > div > div > div > div:nth-child(6) > div:nth-child(2) > div.place_section.k1QQ5 > div.NSTUp > div > a > span"
         show_more_button = WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, b_tag))
         )
@@ -48,7 +49,7 @@ def scroll_up():
     driver.execute_script("arguments[0].scrollTop = 0;", driver.find_element(By.CSS_SELECTOR, ".place_section_header"))
     time.sleep(1)
 
-def crawl_review(driver, rst_name):
+def crawl_review(driver, rst_name, url):
     user = driver.find_element(By.CSS_SELECTOR, ".P9EZi").text                                  # 유저 이름
 
     time.sleep(0.1)
@@ -81,11 +82,11 @@ def crawl_review(driver, rst_name):
     except:
         date = None
 
-    result = [rst_name, user, review_text, u_rst_tag, None, date, 0]                            # 리스트로 저장
+    result = [rst_name, user, review_text, u_rst_tag, None, date, 0, url]                            # 리스트로 저장
 
     return result
 
-def crawl_review_info(rst_name):
+def crawl_review_info(rst_name, url):
     try:
         tabs = driver.find_elements(By.CSS_SELECTOR, "._tab-menu")
         for tab in tabs:
@@ -118,7 +119,7 @@ def crawl_review_info(rst_name):
     print("Review Info\n")
     print(f"해당 식당의 리뷰 개수는 {len(reviews)}입니다\n")
     for i, review in enumerate(reviews):
-        result = crawl_review(review, rst_name)
+        result = crawl_review(review, rst_name, url)
         results.append(result)
 
         if i % 30 == 0:
@@ -159,7 +160,7 @@ def save(file_path):
 
     print(f"\n현재까지 수집한 리뷰 개수 = {len(results)}\n")
     # 리뷰 스키마
-    rev_cols = ['rst_name', 'user_name', 'review_text', 'u_rst_tag', 'ate_menus', 'date', 'platform']
+    rev_cols = ['rst_name', 'user_name', 'review_text', 'u_rst_tag', 'ate_menus', 'date', 'platform', 'url']
     df_review = pd.DataFrame(results, columns=rev_cols)
 
     # 파일 경로와 파일명 받아 저장
@@ -199,12 +200,12 @@ chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
 # git에 데이터 올려놓고 실습실에서 불러올 때 쓰려함
 folder_path = "../data"
 
-file_names = ['광진구음식점', '광진구카페', '광진구술집']
+file_names = ['홍대_음식점', '홍대_카페', '홍대_술집', '잠실_음식점', '잠실_카페', '잠실_술집']
 file_name = file_names[0]
 # csv_path = os.path.join(folder_path, f"df_{file_name}_cleaned.csv")
 
 # Load data
-data = pd.read_csv(folder_path + f"/df_{file_name}_cleaned.csv", encoding='utf-8-sig')
+data = pd.read_csv(folder_path + f"/restaurant_{file_name}.csv", encoding='utf-8-sig')
 urls = data['url']
 
 
@@ -213,7 +214,7 @@ print("Open Driver")
 driver = webdriver.Chrome(service=Service(chrome_driver_path), options=chrome_options)
 driver.maximize_window()
 time.sleep(3)
-print("Driver Opend\n\n")
+print("Driver Opened\n\n")
 
 # 크롤링 시작 시간 기록
 start_time = time.time()
@@ -224,14 +225,17 @@ results = []
 print("Let's Start-!!\n")
 
 # 시작과 끝 번호를 지정해주세요. 이는 파일 저장할 때에도 적용됩니다
-# 음식점 1239, 카페 1241, 술집 718
-start = 1
-end = 50
+# 홍대
+# 음식점 190, 카페 162, 술집 208
+# 잠실
+# 음식점 212, 카페 159, 술집 177
+# start = 0
+# end = 2
 
 # 저장할 파일의 이름
-file_path = folder_path + f"/review_{file_name}_{start}_{end-1}.csv"
+file_path = folder_path + f"/review_{file_name}.csv"
 
-for i, url in enumerate(urls[start:end]):
+for i, url in enumerate(urls):
     driver.get(url)
     time.sleep(3.5)
 
@@ -240,18 +244,18 @@ for i, url in enumerate(urls[start:end]):
 
     # 식당 이름 정보 수집
     try:
-        name = driver.find_element(By.CSS_SELECTOR, ".Fc1rA").text
+        name = driver.find_element(By.CSS_SELECTOR, ".GHAhO").text
     except:
         # 진행중 식당 정보가 사라진 url 발견됨. 넘겨서 해결
         continue
     print("===================================================================================================")
-    print(f"Restaurant Name_{start + i}\n")
+    print(f"Restaurant Name_{i}\n")
     print(name)
     print()
 
     # 리뷰 정보 수집
     try:
-        result = crawl_review_info(name)
+        result = crawl_review_info(name, url)
         results.extend(result)
     except:
         # 중간에 튕긴 경우 지금까지 수집한 것들만 저장
