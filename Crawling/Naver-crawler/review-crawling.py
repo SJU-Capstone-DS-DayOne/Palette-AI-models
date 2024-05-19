@@ -32,12 +32,12 @@ def find_show_more():
         # '더보기' 버튼을 찾음
         #app-root > div > div > div > div:nth-child(6) > div:nth-child(2) > div.place_section.k1QQ5 > div.NSTUp > div > a > span
         b_tag = "#app-root > div > div > div > div:nth-child(6) > div:nth-child(2) > div.place_section.k1QQ5 > div.NSTUp > div > a > span"
-        show_more_button = WebDriverWait(driver, 15).until(
+        show_more_button = WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, b_tag))
         )
         # 버튼 클릭
         show_more_button.click()
-        time.sleep(1.5)
+        time.sleep(10)
 
         return 1
     except:
@@ -103,7 +103,7 @@ def crawl_review_info(rst_name, url):
     # while tag != -1:
     for _ in range(100):
         tag = find_show_more()
-        time.sleep(0.1)   
+        time.sleep(7)   
         if tag == -1:
             break                                                               
         # 끝까지 '더보기' 버튼 클릭
@@ -174,6 +174,7 @@ def save(file_path):
         print("csv 파일을 이어붙였습니다.")
     
     # 중복된 리뷰 저장 방지 위해 리스트 비워주기
+    del results
     results = []
 
 # -----------------------------------------------------------------------------
