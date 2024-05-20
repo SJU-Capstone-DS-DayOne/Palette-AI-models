@@ -31,13 +31,21 @@ def find_show_more():
     try:
         # '더보기' 버튼을 찾음
         #app-root > div > div > div > div:nth-child(6) > div:nth-child(2) > div.place_section.k1QQ5 > div.NSTUp > div > a > span
-        b_tag = "#app-root > div > div > div > div:nth-child(6) > div:nth-child(2) > div.place_section.k1QQ5 > div.NSTUp > div > a > span"
+        #app-root > div > div > div > div:nth-child(6) > div:nth-child(3) > div.place_section.k1QQ5 > div.NSTUp > div > a > span
+        #app-root > div > div > div > div:nth-child(6) > div:nth-child(2) > div.place_section.k1QQ5 > div.NSTUp > div > a > span
+        
+        # b_tag = "#app-root > div > div > div > div:nth-child(6) > div:nth-child(3) > div.place_section.k1QQ5 > div.NSTUp > div > a > span"
+        # b_tag = driver.find_elements(By.CSS_SELECTOR, ".owAeM")
+        # show_more_button = WebDriverWait(driver, 20).until(
+        #     EC.presence_of_element_located((By.CSS_SELECTOR, b_tag))
+        # )
+
         show_more_button = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, b_tag))
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".TeItc"))
         )
         # 버튼 클릭
         show_more_button.click()
-        time.sleep(10)
+        time.sleep(7)
 
         return 1
     except:
@@ -98,12 +106,12 @@ def crawl_review_info(rst_name, url):
     except:
         return []
 
-    time.sleep(0.1)
+    time.sleep(1)
     tag = 1
     # while tag != -1:
-    for _ in range(100):
+    for _ in range(70):
         tag = find_show_more()
-        time.sleep(7)   
+        time.sleep(2)   
         if tag == -1:
             break                                                               
         # 끝까지 '더보기' 버튼 클릭
@@ -143,7 +151,7 @@ def switch_to_search_iframe(driver):
 def switch_to_info_iframe(driver):
     # 전체 페이지로 복귀하도록 iframe에서 벗어나기 -> 그래야만 새로 생긴 iframe 탭에 접근할 수 있음
     driver.switch_to.default_content()
-    time.sleep(0.5)
+    time.sleep(1)
 
     # 새로 생긴 식당 탭 iframe으로 전환
     iframe = driver.find_element(By.CSS_SELECTOR, "#entryIframe")
@@ -238,7 +246,7 @@ file_path = folder_path + f"/review_{file_name}.csv"
 
 for i, url in enumerate(urls):
     driver.get(url)
-    time.sleep(3.5)
+    time.sleep(5)
 
     # 식당 정보 iframe 전환
     switch_to_info_iframe(driver)
@@ -258,6 +266,8 @@ for i, url in enumerate(urls):
     try:
         result = crawl_review_info(name, url)
         results.extend(result)
+
+        del result
     except:
         # 중간에 튕긴 경우 지금까지 수집한 것들만 저장
         save(file_path)
