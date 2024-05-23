@@ -1,4 +1,7 @@
 venv
 restaurant-debugging.ipynb
+summarization-debugging.ipynb
+geocoding-debugging.ipynb
 mood
 __pycache__
+config.py
