@@ -1,8 +1,9 @@
-# Team-Model
+# Model (AI&Data)
 
 ## Description
 
-Capstone Design: Palette’s AI, a dating course recommendation platform for couples
+Palette is a dating course recommendation platform for couples. <br>
+This repository covers AI technologies used in Palette.
 
 ## Member
 
