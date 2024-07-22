@@ -27,6 +27,12 @@ Capstone Design: Palette’s AI, a dating course recommendation platform for cou
 - Our main function, couple recommendation, inferred the recommendation results by summing each user's embeddings.
 - Due to the lack of a quantitative evaluation method for both users, we conducted a survey to more than 100 random people in their 20s and received positive responses from more than 80%.
 
+## Best Dish Extraction
+
+- Extract reliable representative dishes from reviews
+- To this end, we use [KeyBERT](https://github.com/MaartenGr/KeyBERT), a keyword extraction algorithm.
+- Noting that reviews reflect users' subjective feelings, we added a Sentiment Penalty to the KeyBERT score to increase the reliability of the results.
+
 ## Review Analysis
 
 - We used a fine-tuned T5 to summarize a large amount of restaurant reviews.
@@ -40,14 +46,19 @@ Capstone Design: Palette’s AI, a dating course recommendation platform for cou
 
 ## Demo
 
+## Presentation
+
+[![Video Label](https://img.youtube.com/vi/nPBuqKDOywo/sddefault.jpg)](https://www.youtube.com/watch?v=nPBuqKDOywo)
+
 ## Awards
 
 🎉 1st palce in Creatvie Design Competition!!
 
-![capstone_award](https://github.com/user-attachments/assets/8f12fc84-94c9-49a4-b22d-d8aabcf863e3)
+<img src="https://github.com/user-attachments/assets/8f12fc84-94c9-49a4-b22d-d8aabcf863e3" width="600" height="800" />
 
 ## References
 
 - [Naver Place](https://map.naver.com/p/entry/place)
 - [LightGCN](https://github.com/gusye1234/LightGCN-PyTorch)
+- [KeyBERT](https://github.com/MaartenGr/KeyBERT)
 - Fine-tuned [T5](https://huggingface.co/eenzeenee/t5-base-korean-summarization)
