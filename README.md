@@ -56,13 +56,16 @@ You can see more details in the video below.
 
 ## Presentation
 
-[![Video Label](https://img.youtube.com/vi/nPBuqKDOywo/sddefault.jpg)](https://www.youtube.com/watch?v=nPBuqKDOywo)
+<a href="https://www.youtube.com/watch?v=nPBuqKDOywo">
+  <img src="https://img.youtube.com/vi/nPBuqKDOywo/sddefault.jpg" alt="Video Label" width="500" />
+</a>
+
 
 ## Awards
 
-🎉 1st palce in Creatvie Design Competition!!
+🎉 1st palce in Creatvie Design Competition (Capstone Design Project)!!
 
-<img src="https://github.com/user-attachments/assets/8f12fc84-94c9-49a4-b22d-d8aabcf863e3" width="600" height="800" />
+<img src="https://github.com/user-attachments/assets/8f12fc84-94c9-49a4-b22d-d8aabcf863e3" width="500" />
 
 ## References
 
