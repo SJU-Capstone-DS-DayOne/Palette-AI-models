@@ -47,8 +47,8 @@ This repository covers AI technologies used in Palette.
 
 ## Demo
 
-![GIFMaker_me](https://github.com/user-attachments/assets/6b4867b1-f008-41ce-9435-d15384b99b96)
-
+![GIFMaker_me](https://github.com/user-attachments/assets/6b4867b1-f008-41ce-9435-d15384b99b96)  
+You can see more details in the video below.
 
 ## Presentation
 
