@@ -50,7 +50,9 @@ This repository covers AI technologies used in Palette.
 
 
 https://github.com/user-attachments/assets/41f109c2-335e-4978-89d7-3205a92590b1
-
+<video class="video" autoplay muted controls>
+    <source type="video/mp4" src="https://github.com/user-attachments/assets/41f109c2-335e-4978-89d7-3205a92590b1" >
+</video>
 
 
 ## Presentation
