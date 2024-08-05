@@ -27,12 +27,16 @@ This repository covers AI technologies used in Palette.
 - The graph structure was adopted because it can capture overall tastes well in user records.
 - Our main function, couple recommendation, inferred the recommendation results by summing each user's embeddings.
 - Due to the lack of a quantitative evaluation method for both users, we conducted a survey to more than 100 random people in their 20s and received positive responses from more than 80%.
+<img width="350" alt="couple" src="https://github.com/user-attachments/assets/cf8cd784-624e-43a0-a902-23c690cba74a">
+
 
 ## Best Dish Extraction
 
 - Extract reliable representative dishes from reviews
 - To this end, we use [KeyBERT](https://github.com/MaartenGr/KeyBERT), a keyword extraction algorithm.
 - Noting that reviews reflect users' subjective feelings, we added a Sentiment Penalty to the KeyBERT score to increase the reliability of the results.
+  
+<img width="450" alt="kpe" src="https://github.com/user-attachments/assets/a7743047-049c-457a-a8d7-016efcf74b80">
 
 ## Review Analysis
 
