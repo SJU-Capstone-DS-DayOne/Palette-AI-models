@@ -1,4 +1,4 @@
-# Model (AI&Data)
+# Palette-AI-models (AI & Data)
 
 ## Description
 
