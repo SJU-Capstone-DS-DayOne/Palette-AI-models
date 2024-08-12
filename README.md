@@ -18,8 +18,15 @@ This repository covers AI technologies used in Palette.
 ## Data
 
 - All our data was collected from [Naver Place](https://map.naver.com/p/entry/place/1359279525?c=15.00,0,0,0,dh&placePath=/home), a map and restaurant information platform.
-- To this end, we developed a crawling code and collected about 350,000 pieces of data.
+- To this end, we developed a web crawler and collected about 350,000 reviews to be used as interactions.
 - The data consists of restaurant, cafe, and bar business names, categories, locations, reviews, dishes, and dish images.
+
+| **Region** | **#User** | **#Restaurant** | **#Interaction** | **Density(%)** |
+| :------: |  :------: | :------: | :------: | :------: |
+| Gwangjin | 11,935 | 2,108 | 239,170 | 0.95 |
+| Hongdae | 4,158 | 538 | 47,179 | 2.1 |
+| Jamsil | 4,724 | 525 | 59,633 | 2.4 |
+| **Total** | **32,750** | **3,171** | **345,982** |  |
 
 ## Recommendation
 
@@ -27,8 +34,13 @@ This repository covers AI technologies used in Palette.
 - The graph structure was adopted because it can capture overall tastes well in user records.
 - Our main function, couple recommendation, inferred the recommendation results by summing each user's embeddings.
 - Due to the lack of a quantitative evaluation method for both users, we conducted a survey to more than 100 random people in their 20s and received positive responses from more than 80%.
-<img width="350" alt="couple" src="https://github.com/user-attachments/assets/cf8cd784-624e-43a0-a902-23c690cba74a">
 
+| **Dataset** | Yelp2018 | Amazon-Book | __Ours__ |
+| :------: | :------: | :------: | :------: |
+| NDCG | 0.0525 | 0.0318 | __0.0718__ |
+
+<img width="350" alt="couple" src="https://github.com/user-attachments/assets/cf8cd784-624e-43a0-a902-23c690cba74a">
+</br>
 
 ## Best Dish Extraction
 
