@@ -2,7 +2,7 @@
 
 ## Description
 
-Palette is a dating course recommendation platform for couples. <br>
+Palette is a date course recommendation platform for couples. <br>
 This repository covers AI technologies used in Palette.
 
 ## Member
